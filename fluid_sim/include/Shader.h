@@ -14,7 +14,7 @@ class Shader
 public:
 	unsigned int ID; // program ID
 
-	Shader(const char* vertexPath, const char* fragmentPath); // Constructor reads and builds the shader
+	Shader(const std::string vertexPath, const std::string fragmentPath); // Constructor reads and builds the shader
 	void use(); // Use/activate the shader
 	// Utility uniform functions
 	void setBool(const std::string &name, bool value) const;

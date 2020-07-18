@@ -32,12 +32,7 @@ private:
 	//const float cameraRotationSpeed = 0.002f;
 	const float cameraRotationSpeed = 0.015f;
 
-	// Shaders
-	Shader* m_ObsShader;
-	Shader* m_PhongShader;
-	Shader* m_WaterShader;
-	Shader* m_SkyboxShader;
-	Shader* m_FontShader;
+	
 
 	void processInput(GLFWwindow *window); //! Process any inputs
 	void CameraUniformsToShader(unsigned int shaderID); //! Send camera uniforms to the specified shader
@@ -89,6 +84,12 @@ private:
 	
 	void AssignPhongUniforms(); // Setup of the phong uniforms for phong shading
 
+	// Shaders
+
+	
+	std::map<std::string, Shader*> shader_data;
+
+	void _bind_shaders(std::vector<std::string> shader_names);
 
 public:
 	OpenGLCore();

@@ -7,43 +7,50 @@ Cuboid::Cuboid(glm::vec3 size, glm::vec3 centre)
 
 	// 24 vertices required for mapping normals
 
+	glm::vec3 half_size = glm::vec3(
+		size.x / 2.0f,
+		size.y / 2.0f,
+		size.z / 2.0f
+	);
+
 	// Input vertex data
 	float vertices[] = {
+
 		  // Back face
-		  centre.x-(size.x/2), centre.y-(size.y/2), centre.z-(size.z/2), 
-		  centre.x-(size.x/2), centre.y+(size.y/2), centre.z-(size.z/2),
-		  centre.x+(size.x/2), centre.y+(size.y/2), centre.z-(size.z/2),
-		  centre.x+(size.x/2), centre.y-(size.y/2), centre.z-(size.z/2),
+		  centre.x-half_size.x, centre.y-half_size.y, centre.z-half_size.z, 
+		  centre.x-half_size.x, centre.y+half_size.y, centre.z-half_size.z,
+		  centre.x+half_size.x, centre.y+half_size.y, centre.z-half_size.z,
+		  centre.x+half_size.x, centre.y-half_size.y, centre.z-half_size.z,
 
 		  // Front face
-		  centre.x-(size.x/2), centre.y-(size.y/2), centre.z+(size.z/2),
-		  centre.x-(size.x/2), centre.y+(size.y/2), centre.z+(size.z/2),
-		  centre.x+(size.x/2), centre.y+(size.y/2), centre.z+(size.z/2),
-		  centre.x+(size.x/2), centre.y-(size.y/2), centre.z+(size.z/2),
+		  centre.x-half_size.x, centre.y-half_size.y, centre.z+half_size.z,
+		  centre.x-half_size.x, centre.y+half_size.y, centre.z+half_size.z,
+		  centre.x+half_size.x, centre.y+half_size.y, centre.z+half_size.z,
+		  centre.x+half_size.x, centre.y-half_size.y, centre.z+half_size.z,
 
 		  // Left face
-		  centre.x-(size.x/2), centre.y-(size.y/2), centre.z-(size.z/2), 
-		  centre.x-(size.x/2), centre.y+(size.y/2), centre.z-(size.z/2),
-		  centre.x-(size.x/2), centre.y-(size.y/2), centre.z+(size.z/2),
-		  centre.x-(size.x/2), centre.y+(size.y/2), centre.z+(size.z/2),
+		  centre.x-half_size.x, centre.y-half_size.y, centre.z-half_size.z, 
+		  centre.x-half_size.x, centre.y+half_size.y, centre.z-half_size.z,
+		  centre.x-half_size.x, centre.y-half_size.y, centre.z+half_size.z,
+		  centre.x-half_size.x, centre.y+half_size.y, centre.z+half_size.z,
 
 		  // Right face 
-		  centre.x+(size.x/2), centre.y+(size.y/2), centre.z-(size.z/2),
-		  centre.x+(size.x/2), centre.y-(size.y/2), centre.z-(size.z/2),
-		  centre.x+(size.x/2), centre.y+(size.y/2), centre.z+(size.z/2),
-		  centre.x+(size.x/2), centre.y-(size.y/2), centre.z+(size.z/2),
+		  centre.x+half_size.x, centre.y+half_size.y, centre.z-half_size.z,
+		  centre.x+half_size.x, centre.y-half_size.y, centre.z-half_size.z,
+		  centre.x+half_size.x, centre.y+half_size.y, centre.z+half_size.z,
+		  centre.x+half_size.x, centre.y-half_size.y, centre.z+half_size.z,
 
 		  // Top face
-		  centre.x-(size.x/2), centre.y+(size.y/2), centre.z-(size.z/2),
-		  centre.x+(size.x/2), centre.y+(size.y/2), centre.z-(size.z/2),
-		  centre.x-(size.x/2), centre.y+(size.y/2), centre.z+(size.z/2),
-		  centre.x+(size.x/2), centre.y+(size.y/2), centre.z+(size.z/2),
+		  centre.x-half_size.x, centre.y+half_size.y, centre.z-half_size.z,
+		  centre.x+half_size.x, centre.y+half_size.y, centre.z-half_size.z,
+		  centre.x-half_size.x, centre.y+half_size.y, centre.z+half_size.z,
+		  centre.x+half_size.x, centre.y+half_size.y, centre.z+half_size.z,
 
 		  // Bottom face
-		  centre.x-(size.x/2), centre.y-(size.y/2), centre.z-(size.z/2), 
-		  centre.x+(size.x/2), centre.y-(size.y/2), centre.z-(size.z/2),
-		  centre.x-(size.x/2), centre.y-(size.y/2), centre.z+(size.z/2),
-		  centre.x+(size.x/2), centre.y-(size.y/2), centre.z+(size.z/2)
+		  centre.x-half_size.x, centre.y-half_size.y, centre.z-half_size.z, 
+		  centre.x+half_size.x, centre.y-half_size.y, centre.z-half_size.z,
+		  centre.x-half_size.x, centre.y-half_size.y, centre.z+half_size.z,
+		  centre.x+half_size.x, centre.y-half_size.y, centre.z+half_size.z
 
 	};
 
@@ -72,9 +79,7 @@ Cuboid::Cuboid(glm::vec3 size, glm::vec3 centre)
 		// Bottom face
 		20, 22, 23, 
 		20, 23, 21
-
-		
-		
+	
 	};
 	
 	float normals[] = {
@@ -133,11 +138,7 @@ Cuboid::Cuboid(glm::vec3 size, glm::vec3 centre)
 
 	// 4 - Set our vertex attributes pointers
 	
-
-	
-
 	glBindVertexArray(0);
-
 
 }
 

@@ -1,6 +1,6 @@
 #include "Shader.h"
 
-Shader::Shader(const char* vertexPath, const char* fragmentPath)
+Shader::Shader(const std::string vertexPath, const std::string fragmentPath)
 {
 	//1. retrieve the vertex/fragment source code from filePath
 	std::string vertexCode;
@@ -12,9 +12,13 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
 	fShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
 	try
 	{
+		// convert input to chars
+		const char* vertexPath_char = vertexPath.c_str();
+		const char* fragmentPath_char = fragmentPath.c_str();
+
 		// Open files
-		vShaderFile.open(vertexPath);
-		fShaderFile.open(fragmentPath);
+		vShaderFile.open(vertexPath_char);
+		fShaderFile.open(fragmentPath_char);
 		std::stringstream vShaderStream, fShaderStream;
 		// Read file's buffer contents into streams
 		vShaderStream << vShaderFile.rdbuf();

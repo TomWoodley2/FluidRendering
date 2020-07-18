@@ -14,6 +14,8 @@ OpenGLCore::OpenGLCore()
 	window = glfwCreateWindow(windowSizeX, windowSizeY, "Fluid Simulation ", NULL, NULL);
 	//window = glfwCreateWindow(1920,1080, "Fluid Simulation", glfwGetPrimaryMonitor(), NULL);
 
+	
+
 	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -50,12 +52,17 @@ OpenGLCore::OpenGLCore()
 
 	glfwSetKeyCallback(window, func);
 
+	// map storing shader name against the actual shader pointer
+	std::vector<std::string> shader_names = {
+		"obstacle",
+		"phong",
+		"fluid",
+		"skybox",
+		"font"
+	};
 
-	m_ObsShader = new Shader("shaders/obstacle.vert", "shaders/obstacle.frag"); // Shader for obstacles
-	m_PhongShader = new Shader("shaders/phong.vert", "shaders/phong.frag"); // Phong shader for obstacles
-	m_WaterShader = new Shader("shaders/fluid.vert", "shaders/fluid.frag"); // Shader for fluid
-	m_SkyboxShader = new Shader("shaders/skybox.vert","shaders/skybox.frag");
-	m_FontShader = new Shader("shaders/font.vert", "shaders/font.frag");
+	_bind_shaders(shader_names); // bind the shaders to respective shader classes
+	
 }
 
 // Callback for when window gets resized
@@ -254,22 +261,22 @@ void OpenGLCore::CameraUniformsToShader(unsigned int shaderID)
 void OpenGLCore::AssignPhongUniforms()
 {
 	// Setup phong lighting
-	m_PhongShader->use();
+	shader_data["phong"]->use();
 	glm::vec3 worldLight = glm::vec3(4.0f, 10.0f, -10.0f);
 
-	int IaLoc = glGetUniformLocation(m_PhongShader->ID, "Ia"); 
+	int IaLoc = glGetUniformLocation(shader_data["phong"]->ID, "Ia");
 	glUniform3fv(IaLoc,1, glm::value_ptr(glm::vec3(0.5f,0.5f,0.5f))); // Ambient intensity
 	
-	int IpLoc = glGetUniformLocation(m_PhongShader->ID, "Ip");
+	int IpLoc = glGetUniformLocation(shader_data["phong"]->ID, "Ip");
 	glUniform3fv(IpLoc,1, glm::value_ptr(glm::vec3(0.9f,0.9f,0.9f))); //
-	int CameraPosLoc = glGetUniformLocation(m_PhongShader->ID, "CameraPosition");
+	int CameraPosLoc = glGetUniformLocation(shader_data["phong"]->ID, "CameraPosition");
 	glUniform3fv(CameraPosLoc,1, glm::value_ptr(m_camera.getPosition())); // Camera position to base shading on
-	int LightPosLoc = glGetUniformLocation(m_PhongShader->ID, "LightPosition"); // Position of light
+	int LightPosLoc = glGetUniformLocation(shader_data["phong"]->ID, "LightPosition"); // Position of light
 	glUniform3fv(LightPosLoc,1, glm::value_ptr(worldLight)); 
 
-	int KaLoc = glGetUniformLocation(m_PhongShader->ID, "Ka"); // Ambient coeff
+	int KaLoc = glGetUniformLocation(shader_data["phong"]->ID, "Ka"); // Ambient coeff
 	glUniform3fv(KaLoc,1, glm::value_ptr(glm::vec3(0.3f, 0.3f, 0.3f))); 
-	int KsLoc = glGetUniformLocation(m_PhongShader->ID, "Ks"); // Specular coeff
+	int KsLoc = glGetUniformLocation(shader_data["phong"]->ID, "Ks"); // Specular coeff
 	glUniform3fv(KsLoc,1, glm::value_ptr(glm::vec3(0.29f, 0.29f, 0.29f)));
 }
 
@@ -286,10 +293,10 @@ void OpenGLCore::renderText()
 {
 	// Change the colour depending on which array is targeted
 	glm::vec4 currentGeneratorColour = m_currentParticleGenerator->getColour();
-	glUniform3f(glGetUniformLocation(m_FontShader->ID, "textColour"),currentGeneratorColour.r , currentGeneratorColour.g, currentGeneratorColour.b);
+	glUniform3f(glGetUniformLocation(shader_data["font"]->ID, "textColour"),currentGeneratorColour.r , currentGeneratorColour.g, currentGeneratorColour.b);
 	m_text->render("Active Array: "+ std::to_string(currentGenerator), 0.02, 0.90, 0.4);
 
-	glUniform3f(glGetUniformLocation(m_FontShader->ID, "textColour"),0.0f, 0.0f, 0.0f);
+	glUniform3f(glGetUniformLocation(shader_data["font"]->ID, "textColour"),0.0f, 0.0f, 0.0f);
 	m_text->render("Particle Count: "+std::to_string(m_Generators[currentGenerator]->getParticleCount()),0.02,0.95,0.4);
 	m_text->render("Controls:",0.02,0.34,0.4);
 	m_text->render("P - Pause/Resume Simulation",0.02,0.30,0.4);
@@ -317,9 +324,9 @@ void OpenGLCore::render()
 	}
 
 	// -- SKYBOX --
-	m_SkyboxShader->use();
+	shader_data["skybox"]->use();
 	model[3] = glm::vec4(m_camera.getPosition(), 1.0);
-	currentShaderID = m_SkyboxShader->ID;
+	currentShaderID = shader_data["skybox"]->ID;
 	CameraUniformsToShader(currentShaderID);
 	// Check if currently drawing outline scene and swap to render skybox if required
 	glDisable(GL_DEPTH_TEST); // Disabled for skybox display
@@ -338,8 +345,8 @@ void OpenGLCore::render()
 	model = glm::mat4(1.0f);
 
 	// -- OBSTACLES -- 
-	m_PhongShader->use();
-	currentShaderID = m_PhongShader->ID;
+	shader_data["phong"]->use();
+	currentShaderID = shader_data["phong"]->ID;
 	CameraUniformsToShader(currentShaderID); // Send transformation data to shader - has to be done per frame
 	// Cube
 	glUniform4fv(glGetUniformLocation(currentShaderID, "colour"),1, glm::value_ptr(m_cube->getColour()));
@@ -353,8 +360,8 @@ void OpenGLCore::render()
 	// Render the particles as particles or as a solid (or a single plane!)
 	if (isRenderingSinglePlane)
 	{
-		m_PhongShader->use();
-		currentShaderID = m_PhongShader->ID;
+		shader_data["phong"]->use();
+		currentShaderID = shader_data["phong"]->ID;
 		CameraUniformsToShader(currentShaderID);
 		
 		for(int i = 0; i< m_Generators.size();i++)
@@ -367,10 +374,10 @@ void OpenGLCore::render()
 	{
 		if (drawParticles)
 		{
-			m_WaterShader->use();
+			shader_data["fluid"]->use();
 
-			currentShaderID = m_WaterShader->ID;
-			CameraUniformsToShader(m_WaterShader->ID);
+			currentShaderID = shader_data["fluid"]->ID;
+			CameraUniformsToShader(shader_data["fluid"]->ID);
 			for(int i = 0; i< m_Generators.size();i++)
 			{
 				glUniform4fv(glGetUniformLocation(currentShaderID, "colour"), 1, glm::value_ptr(m_Generators[i]->getColour()));
@@ -381,8 +388,8 @@ void OpenGLCore::render()
 		else
 		{
 			// Uses ObsShader
-			m_PhongShader->use();
-			currentShaderID = m_PhongShader->ID;
+			shader_data["phong"]->use();
+			currentShaderID = shader_data["phong"]->ID;
 			CameraUniformsToShader(currentShaderID);
 
 			
@@ -398,8 +405,8 @@ void OpenGLCore::render()
 	// -- TEXT --
 
 	glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(windowSizeX), 0.0f, static_cast<float>(windowSizeY));
-	m_FontShader->use();
-	glUniformMatrix4fv(glGetUniformLocation(m_FontShader->ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+	shader_data["font"]->use();
+	glUniformMatrix4fv(glGetUniformLocation(shader_data["font"]->ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 	
 	// Decide how text should be rendered (if rendered)
 	if (isDebug)
@@ -422,8 +429,6 @@ int OpenGLCore::Run()
 {
 	
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); // tell openGL to call framebuffer_size_callback on every resize
-
-
 
 	//http://www.newty.de/fpt/fpt.html#defi
 	//https://stackoverflow.com/questions/1485983/calling-c-class-methods-via-a-function-pointer
@@ -477,7 +482,7 @@ int OpenGLCore::Run()
 	
 	// Setting up normal matrix for Phong shader
 	glm::mat3 normMat = glm::transpose(glm::inverse(glm::mat3(model)));
-	int normalLoc = glGetUniformLocation(m_PhongShader->ID, "NormalMatrix");
+	int normalLoc = glGetUniformLocation(shader_data["phong"]->ID, "NormalMatrix");
 	glUniformMatrix3fv(normalLoc, 1, GL_FALSE, glm::value_ptr(normMat));
 
 	// Setup dt updation
@@ -529,15 +534,40 @@ int OpenGLCore::Run()
 	delete m_skybox;
 	delete m_text;
 
-	delete m_ObsShader;
-	delete m_PhongShader;
-	delete m_WaterShader;
-	delete m_SkyboxShader;
-	delete m_FontShader;
+	// Cleanup Shader Data
+	for (auto it = shader_data.begin(); it!=shader_data.end(); it++)
+	{
+		if (it->second)
+		{
+			delete it->second;
+		}
+	}
 
 	glfwTerminate(); // Clean/delete all GLFW resources allocated
 	return 0;
 
+}
+//=================================================================================================
+
+/// @brief Binds each shader name to a new shader pointer based on the vertex and fragment shaders
+///        with the same name
+/// @param shader_names string names of each shader - actual name and how they are refered to in code
+
+void OpenGLCore::_bind_shaders(std::vector<std::string> shader_names)
+{
+	std::string vertex_name;
+	std::string frag_name;
+	std::string current_shader_name;
+
+	for (int i = 0; i < shader_names.size(); i++)
+	{	
+		current_shader_name = shader_names[i];
+		vertex_name = "shaders/" + current_shader_name + ".vert";
+		frag_name = "shaders/" + current_shader_name + ".frag";
+
+		shader_data[current_shader_name] = new Shader(vertex_name, frag_name);
+	}
+	
 }
 
 
