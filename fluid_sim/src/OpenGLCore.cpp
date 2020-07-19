@@ -360,44 +360,17 @@ void OpenGLCore::render()
 	// Render the particles as particles or as a solid (or a single plane!)
 	if (isRenderingSinglePlane)
 	{
-		shader_data["phong"]->use();
-		currentShaderID = shader_data["phong"]->ID;
-		CameraUniformsToShader(currentShaderID);
-		
-		for(int i = 0; i< m_Generators.size();i++)
-		{
-			glUniform4fv(glGetUniformLocation(currentShaderID, "colour"), 1, glm::value_ptr(m_Generators[i]->getColour()));
-			m_Generators[i]->renderSolidPlane(planeName);
-		}
+		_render_particles("phong", "solid_plane");
 	}
 	else
 	{
 		if (drawParticles)
 		{
-			shader_data["fluid"]->use();
-
-			currentShaderID = shader_data["fluid"]->ID;
-			CameraUniformsToShader(shader_data["fluid"]->ID);
-			for(int i = 0; i< m_Generators.size();i++)
-			{
-				glUniform4fv(glGetUniformLocation(currentShaderID, "colour"), 1, glm::value_ptr(m_Generators[i]->getColour()));
-				m_Generators[i]->renderParticles();
-			}
-			
+			_render_particles("fluid", "particles");	
 		}
 		else
 		{
-			// Uses ObsShader
-			shader_data["phong"]->use();
-			currentShaderID = shader_data["phong"]->ID;
-			CameraUniformsToShader(currentShaderID);
-
-			
-			for(int i = 0; i< m_Generators.size();i++)
-			{
-				glUniform4fv(glGetUniformLocation(currentShaderID, "colour"), 1, glm::value_ptr(m_Generators[i]->getColour()));
-				m_Generators[i]->renderSolid();
-			}
+			_render_particles("phong", "solid");
 		}
 	}
 		
@@ -433,19 +406,17 @@ int OpenGLCore::Run()
 	//http://www.newty.de/fpt/fpt.html#defi
 	//https://stackoverflow.com/questions/1485983/calling-c-class-methods-via-a-function-pointer
 	
-
 	//-----------------------------------------------------------------------------------------
 	// SETUP DRAWING HERE
 
 	// Cuboid
-	glm::vec3 size = glm::vec3(0.5f,0.5f,0.5f);
+	glm::vec3 size   = glm::vec3(0.5f,0.5f,0.5f);
 	glm::vec3 centre = glm::vec3(-1.0f,-0.75f,2.0f);
-
-	m_cube = new Cuboid(size, centre);
+	m_cube           = new Cuboid(size, centre);
 	m_cube->setColour(glm::vec4(0.5f,1.0f,1.0f,1.0f));
 
 	// Baseplane
-	size = glm::vec3(14.0f, 0.05f, 6.0f);
+	size   = glm::vec3(14.0f, 0.05f, 6.0f);
 	centre = glm::vec3(5.0f,-1.0f, 0.0f);
 
 	m_plane = new Cuboid(size, centre);
@@ -508,7 +479,6 @@ int OpenGLCore::Run()
 		update(frameTimes[currentFrame]);
 		render();
 
-		
 		// END OF FRAME OPERATIONS
 
 		glfwPollEvents(); // Checks if any events are triggered
@@ -521,27 +491,7 @@ int OpenGLCore::Run()
 		currentFrame = (currentFrame + 1) % framesToMonitor;
 	}
 
-	// Delete particle generators
-	for (std::vector< ParticleGenerator* >::iterator it = m_Generators.begin() ; it != m_Generators.end(); ++it)
-	{
-		delete (*it);
-	} 
-	m_Generators.clear();
-	
-	// Delete all other pointer objects
-	delete m_cube;
-	delete m_plane;
-	delete m_skybox;
-	delete m_text;
-
-	// Cleanup Shader Data
-	for (auto it = shader_data.begin(); it!=shader_data.end(); it++)
-	{
-		if (it->second)
-		{
-			delete it->second;
-		}
-	}
+	_cleanup_objects();
 
 	glfwTerminate(); // Clean/delete all GLFW resources allocated
 	return 0;
@@ -568,6 +518,58 @@ void OpenGLCore::_bind_shaders(std::vector<std::string> shader_names)
 		shader_data[current_shader_name] = new Shader(vertex_name, frag_name);
 	}
 	
+}
+
+//=================================================================================================
+
+/// @brief render the particles for each particle generator based on the assigned shader 
+///        and rendering name
+/// @param shader_name The name of the shader to use for all particle systems
+/// @param render_type Type of rendering to use for all particle systems
+
+void OpenGLCore::_render_particles(const std::string shader_name, const std::string render_type)
+{
+	shader_data[shader_name]->use();
+	currentShaderID = shader_data[shader_name]->ID;
+	CameraUniformsToShader(currentShaderID);
+
+	for (int i = 0; i < m_Generators.size(); i++)
+	{
+		glUniform4fv(glGetUniformLocation(currentShaderID, "colour"), 1, glm::value_ptr(m_Generators[i]->getColour()));
+		
+		if      (render_type == "solid_plane") { m_Generators[i]->renderSolidPlane(planeName); }
+		else if (render_type == "particles")   { m_Generators[i]->renderParticles(); }
+		else if (render_type == "solid")	   { m_Generators[i]->renderSolid(); }
+	}
+}
+
+//===============================================================================================
+
+/// @brief Destroys all current object pointers, this could be used when making a new scene
+
+void OpenGLCore::_cleanup_objects()
+{
+	// Delete particle generators
+	for (std::vector< ParticleGenerator* >::iterator it = m_Generators.begin(); it != m_Generators.end(); ++it)
+	{
+		delete (*it);
+	}
+	m_Generators.clear();
+
+	// Delete all other pointer objects
+	delete m_cube;
+	delete m_plane;
+	delete m_skybox;
+	delete m_text;
+
+	// Cleanup Shader Data
+	for (auto it = shader_data.begin(); it != shader_data.end(); it++)
+	{
+		if (it->second)
+		{
+			delete it->second;
+		}
+	}
 }
 
 

@@ -32,8 +32,6 @@ private:
 	//const float cameraRotationSpeed = 0.002f;
 	const float cameraRotationSpeed = 0.015f;
 
-	
-
 	void processInput(GLFWwindow *window); //! Process any inputs
 	void CameraUniformsToShader(unsigned int shaderID); //! Send camera uniforms to the specified shader
 
@@ -86,10 +84,11 @@ private:
 
 	// Shaders
 
-	
 	std::map<std::string, Shader*> shader_data;
 
 	void _bind_shaders(std::vector<std::string> shader_names);
+	void _render_particles(const std::string shader_name, const std::string render_type);
+	void _cleanup_objects();
 
 public:
 	OpenGLCore();
