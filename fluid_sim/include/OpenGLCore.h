@@ -89,6 +89,7 @@ private:
 	void _bind_shaders(std::vector<std::string> shader_names);
 	void _render_particles(const std::string shader_name, const std::string render_type);
 	void _cleanup_objects();
+	void _setup_objects();
 
 public:
 	OpenGLCore();

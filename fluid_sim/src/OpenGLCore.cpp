@@ -73,87 +73,76 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 // Used for toggling keys
 void OpenGLCore::key_callback(GLFWwindow* windowIn, int key, int scancode, int action, int mods) 
 {
-	if (key == GLFW_KEY_1 && action == GLFW_PRESS)
+	if (action == GLFW_PRESS)
 	{
-		isRenderingAsLines = !isRenderingAsLines;
-		
-	}
-	if (key == GLFW_KEY_2 && action == GLFW_PRESS)
-	{
-		drawParticles = !drawParticles;
-		isRenderingSinglePlane = false;
-	}
-	if (key == GLFW_KEY_P && action == GLFW_PRESS)
-	{
-		isPaused = !isPaused;
-	}
-	if (key == GLFW_KEY_TAB && action == GLFW_PRESS)
-	{
-		isDebug = !isDebug;
-	}
-	/*
-	if (key == GLFW_KEY_9 && action == GLFW_PRESS)
-	{
-		m_pGenerator->setParticleRoot(m_pGenerator->getParticleRoot() - 1);
-	}
-	if (key == GLFW_KEY_0 && action == GLFW_PRESS)
-	{
-		m_pGenerator->setParticleRoot(m_pGenerator->getParticleRoot() + 1);
-	}
-	*/
-	// Changing the assigned current particle generator
-	if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
-	{
-		// More to the next left generator
-		if (currentGenerator != 0)
+		switch (key)
 		{
-			currentGenerator -= 1;
-		}
-		else 
-		{
-			currentGenerator = m_Generators.size() - 1;
-		}
-		m_currentParticleGenerator = m_Generators[currentGenerator]; 
+		case GLFW_KEY_1 :
+			isRenderingAsLines = !isRenderingAsLines;
+			break;
 
-	}
-	if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
-	{
-		// Move to the next right generator
-		if (currentGenerator !=  m_Generators.size() - 1)
-		{
-			currentGenerator += 1;
-		}
-		else
-		{
-			currentGenerator = 0;
-		}
-		m_currentParticleGenerator = m_Generators[currentGenerator];
-	}
+		case GLFW_KEY_2 :
+			drawParticles = !drawParticles;
+			isRenderingSinglePlane = false;
+			break;
 
-	// Set to fullscreen
-	if (key == GLFW_KEY_F && action == GLFW_PRESS)
-	{
-		
-		if (!isFullscreen)
-		{
-			windowSizeX = glfwGetVideoMode(glfwGetPrimaryMonitor())->width;
-			windowSizeY = glfwGetVideoMode(glfwGetPrimaryMonitor())->height;
-			glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(),0,0,windowSizeX,windowSizeY, NULL);
-			isFullscreen = true;
-		}
-		else
-		{
-			windowSizeX = 800.0f;
-			windowSizeY = 600.0f;
-			glfwSetWindowMonitor(window, NULL,0,0,windowSizeX,windowSizeY, NULL);
-			//glfwRestoreWindow(window);
-			isFullscreen = false;
-		}
-		
-		glViewport(0, 0, windowSizeX, windowSizeY);
-		projection = glm::perspective(glm::radians(70.0f), windowSizeX/windowSizeY, 0.1f, 100.0f); 
+		case GLFW_KEY_P :
+			isPaused = !isPaused;
+			break;
 
+		case GLFW_KEY_TAB :
+			isDebug = !isDebug;
+			break;
+
+		case GLFW_KEY_LEFT :
+			// More to the next left generator
+			if (currentGenerator != 0)
+			{
+				currentGenerator -= 1;
+			}
+			else
+			{
+				currentGenerator = m_Generators.size() - 1;
+			}
+			m_currentParticleGenerator = m_Generators[currentGenerator];
+			break;
+		case GLFW_KEY_RIGHT :
+			// Move to the next right generator
+			if (currentGenerator != m_Generators.size() - 1)
+			{
+				currentGenerator += 1;
+			}
+			else
+			{
+				currentGenerator = 0;
+			}
+			m_currentParticleGenerator = m_Generators[currentGenerator];
+			break;
+
+		case GLFW_KEY_F :
+			if (!isFullscreen)
+			{
+				windowSizeX = glfwGetVideoMode(glfwGetPrimaryMonitor())->width;
+				windowSizeY = glfwGetVideoMode(glfwGetPrimaryMonitor())->height;
+				glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, windowSizeX, windowSizeY, NULL);
+				isFullscreen = true;
+			}
+			else
+			{
+				windowSizeX = 800.0f;
+				windowSizeY = 600.0f;
+				glfwSetWindowMonitor(window, NULL, 0, 0, windowSizeX, windowSizeY, NULL);
+				//glfwRestoreWindow(window);
+				isFullscreen = false;
+			}
+
+			glViewport(0, 0, windowSizeX, windowSizeY);
+			projection = glm::perspective(glm::radians(70.0f), windowSizeX / windowSizeY, 0.1f, 100.0f);
+			break;
+		}
+	
 	}
+	
 }
 
 //INPUTS
@@ -196,8 +185,6 @@ void OpenGLCore::processInput(GLFWwindow *window)
 		isRenderingSinglePlane = true;
 		planeName = "bottom";
 	}
-
-	
 
 	// CAMERA MOVEMENT
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -262,22 +249,36 @@ void OpenGLCore::AssignPhongUniforms()
 {
 	// Setup phong lighting
 	shader_data["phong"]->use();
-	glm::vec3 worldLight = glm::vec3(4.0f, 10.0f, -10.0f);
 
+	glm::vec3 worldLight           = glm::vec3(4.0f, 10.0f, -10.0f);
+	glm::vec3 ambient_intensity    = glm::vec3(0.5f,  0.5f,   0.5f);
+	glm::vec3 point_intensity      = glm::vec3(0.9f,  0.9f,   0.9f);
+	glm::vec3 ambient_coefficient  = glm::vec3(0.3f,  0.3f,   0.3f);
+	glm::vec3 specular_coefficient = glm::vec3(0.29f, 0.29f,  0.29f);
+
+	// Ambient intensity
 	int IaLoc = glGetUniformLocation(shader_data["phong"]->ID, "Ia");
-	glUniform3fv(IaLoc,1, glm::value_ptr(glm::vec3(0.5f,0.5f,0.5f))); // Ambient intensity
+	glUniform3fv(IaLoc,1, glm::value_ptr(ambient_intensity)); 
 	
+	// Point intensity
 	int IpLoc = glGetUniformLocation(shader_data["phong"]->ID, "Ip");
-	glUniform3fv(IpLoc,1, glm::value_ptr(glm::vec3(0.9f,0.9f,0.9f))); //
-	int CameraPosLoc = glGetUniformLocation(shader_data["phong"]->ID, "CameraPosition");
-	glUniform3fv(CameraPosLoc,1, glm::value_ptr(m_camera.getPosition())); // Camera position to base shading on
-	int LightPosLoc = glGetUniformLocation(shader_data["phong"]->ID, "LightPosition"); // Position of light
-	glUniform3fv(LightPosLoc,1, glm::value_ptr(worldLight)); 
+	glUniform3fv(IpLoc,1, glm::value_ptr(point_intensity));
 
-	int KaLoc = glGetUniformLocation(shader_data["phong"]->ID, "Ka"); // Ambient coeff
-	glUniform3fv(KaLoc,1, glm::value_ptr(glm::vec3(0.3f, 0.3f, 0.3f))); 
-	int KsLoc = glGetUniformLocation(shader_data["phong"]->ID, "Ks"); // Specular coeff
-	glUniform3fv(KsLoc,1, glm::value_ptr(glm::vec3(0.29f, 0.29f, 0.29f)));
+	// Camera position to base shading on
+	int CameraPosLoc = glGetUniformLocation(shader_data["phong"]->ID, "CameraPosition");
+	glUniform3fv(CameraPosLoc,1, glm::value_ptr(m_camera.getPosition())); 
+	
+	// Position of light
+	int LightPosLoc = glGetUniformLocation(shader_data["phong"]->ID, "LightPosition"); 
+	glUniform3fv(LightPosLoc,1, glm::value_ptr(worldLight)); 
+	
+	// Ambient coeff
+	int KaLoc = glGetUniformLocation(shader_data["phong"]->ID, "Ka"); 
+	glUniform3fv(KaLoc,1, glm::value_ptr(ambient_coefficient)); 
+
+	// Specular coeff
+	int KsLoc = glGetUniformLocation(shader_data["phong"]->ID, "Ks"); 
+	glUniform3fv(KsLoc,1, glm::value_ptr(specular_coefficient));
 }
 
 
@@ -402,48 +403,12 @@ int OpenGLCore::Run()
 {
 	
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); // tell openGL to call framebuffer_size_callback on every resize
-
-	//http://www.newty.de/fpt/fpt.html#defi
-	//https://stackoverflow.com/questions/1485983/calling-c-class-methods-via-a-function-pointer
 	
-	//-----------------------------------------------------------------------------------------
-	// SETUP DRAWING HERE
-
-	// Cuboid
-	glm::vec3 size   = glm::vec3(0.5f,0.5f,0.5f);
-	glm::vec3 centre = glm::vec3(-1.0f,-0.75f,2.0f);
-	m_cube           = new Cuboid(size, centre);
-	m_cube->setColour(glm::vec4(0.5f,1.0f,1.0f,1.0f));
-
-	// Baseplane
-	size   = glm::vec3(14.0f, 0.05f, 6.0f);
-	centre = glm::vec3(5.0f,-1.0f, 0.0f);
-
-	m_plane = new Cuboid(size, centre);
-	m_plane->setColour(glm::vec4(1.0f,0.5f,0.5f,1.0f));
-
-	// Particle arrays
-	m_Generators.push_back(new ParticleGenerator(glm::vec3(0.0f,0.0f,0.0f),glm::vec3(1.0f,1.0f,1.0f),3));
-	m_Generators.push_back(new ParticleGenerator(glm::vec3(2.5f,0.5f,0.5f),glm::vec3(3.5f,0.1f,1.0f),4));
-	m_Generators.push_back(new ParticleGenerator(glm::vec3(4.5f,0.0f,0.0f),glm::vec3(6.5f,2.0f,2.0f),5));
-	m_Generators.push_back(new ParticleGenerator(glm::vec3(8.0f,0.0f,0.0f),glm::vec3(8.5f,0.5f,0.5f),6));
-	m_Generators.push_back(new ParticleGenerator(glm::vec3(10.0f,0.0f,0.0f),glm::vec3(11.0f,3.0f,1.0f),7));
-
-	m_Generators[0]->setColour(glm::vec4(1.0f,0.0f,0.0f,1.0f)); // Transparent red
-	m_Generators[1]->setColour(glm::vec4(1.0f,0.65f,0.0f,0.8f)); // Orange
-	m_Generators[2]->setColour(glm::vec4(0.0f,1.0f,0.0f,0.6f)); // Green
-	m_Generators[3]->setColour(glm::vec4(0.0f,0.0f,1.0f,0.4f)); // Blue
-	m_Generators[4]->setColour(glm::vec4(0.4f,0.0f,0.8f,0.2f)); // Solid purple
+	_setup_objects();
 
 	// Set particle array initially to left most
 	m_currentParticleGenerator = m_Generators[currentGenerator]; 
 
-	m_skybox = new Skybox(5.f); // Setup skybox size 5
-
-	// text
-	m_text = new Text;
-	m_text->setupDefaultFont();
-	
 	AssignPhongUniforms();
 
 	// Initialising camera model matrix and setup of projection matrix
@@ -462,6 +427,9 @@ int OpenGLCore::Run()
 	std::fill(frameTimes.begin(), frameTimes.end(), 0); // Fill with 0s
 	
 	//-----------------------------------------------------------------------------------------
+
+	std::chrono::high_resolution_clock::time_point frameEndTime;
+	std::chrono::duration<double> frameDuration;
 
 	// Check if GLFW has been instructed to close
 	while(!glfwWindowShouldClose(window))
@@ -484,8 +452,9 @@ int OpenGLCore::Run()
 		glfwPollEvents(); // Checks if any events are triggered
 		glfwSwapBuffers(window); // Swap the colour buffer
 
-		std::chrono::high_resolution_clock::time_point frameEndTime = std::chrono::high_resolution_clock::now(); // End of frame
-		std::chrono::duration<double> frameDuration = std::chrono::duration_cast<std::chrono::duration<double>>(frameEndTime - frameStartTime); // Duration of frame
+		frameEndTime = std::chrono::high_resolution_clock::now(); // End of frame
+		frameDuration = std::chrono::duration_cast<std::chrono::duration<double>>(frameEndTime - frameStartTime); // Duration of frame
+
 		// Update frame in the vector and change current frame
 		frameTimes[currentFrame] = frameDuration.count(); 
 		currentFrame = (currentFrame + 1) % framesToMonitor;
@@ -572,5 +541,41 @@ void OpenGLCore::_cleanup_objects()
 	}
 }
 
+//===============================================================================================
 
+
+void OpenGLCore::_setup_objects()
+{
+	// Cuboid
+	glm::vec3 size = glm::vec3(0.5f, 0.5f, 0.5f);
+	glm::vec3 centre = glm::vec3(-1.0f, -0.75f, 2.0f);
+	m_cube = new Cuboid(size, centre);
+	m_cube->setColour(glm::vec4(0.5f, 1.0f, 1.0f, 1.0f));
+
+	// Baseplane
+	size = glm::vec3(14.0f, 0.05f, 6.0f);
+	centre = glm::vec3(5.0f, -1.0f, 0.0f);
+
+	m_plane = new Cuboid(size, centre);
+	m_plane->setColour(glm::vec4(1.0f, 0.5f, 0.5f, 1.0f));
+
+	// Particle arrays
+	m_Generators.push_back(new ParticleGenerator(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 3));
+	m_Generators.push_back(new ParticleGenerator(glm::vec3(2.5f, 0.5f, 0.5f), glm::vec3(3.5f, 0.1f, 1.0f), 4));
+	m_Generators.push_back(new ParticleGenerator(glm::vec3(4.5f, 0.0f, 0.0f), glm::vec3(6.5f, 2.0f, 2.0f), 5));
+	m_Generators.push_back(new ParticleGenerator(glm::vec3(8.0f, 0.0f, 0.0f), glm::vec3(8.5f, 0.5f, 0.5f), 6));
+	m_Generators.push_back(new ParticleGenerator(glm::vec3(10.0f, 0.0f, 0.0f), glm::vec3(11.0f, 3.0f, 1.0f), 7));
+
+	m_Generators[0]->setColour(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f)); // Transparent red
+	m_Generators[1]->setColour(glm::vec4(1.0f, 0.65f, 0.0f, 0.8f)); // Orange
+	m_Generators[2]->setColour(glm::vec4(0.0f, 1.0f, 0.0f, 0.6f)); // Green
+	m_Generators[3]->setColour(glm::vec4(0.0f, 0.0f, 1.0f, 0.4f)); // Blue
+	m_Generators[4]->setColour(glm::vec4(0.4f, 0.0f, 0.8f, 0.2f)); // Solid purple
+
+	m_skybox = new Skybox(5.f); // Setup skybox size 5
+
+	// text
+	m_text = new Text;
+	m_text->setupDefaultFont();
+}
 	
